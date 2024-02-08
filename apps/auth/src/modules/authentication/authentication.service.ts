@@ -5,8 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginDto } from "./dtos/login.dto";
 import { UserStatus } from "@app/blogtivity-lib/constants/user-status.constant";
-import { TokenGenerator } from "./utils/token.generator";
+import { TokenGenerator } from "../../utils/token.generator";
 import { TokenDto } from "./dtos/token.dto";
+import { TokenValidator } from "../../utils/token.validator";
 
 @Injectable()
 export class AuthenticationService {
@@ -14,7 +15,8 @@ export class AuthenticationService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
-        private tokenGenerator: TokenGenerator
+        private tokenGenerator: TokenGenerator,
+        private tokenValidator: TokenValidator,
     ) { }
 
     async register(registerDto: RegisterDto): Promise<User> {
@@ -28,6 +30,22 @@ export class AuthenticationService {
 
     async login(loginDto: LoginDto): Promise<TokenDto> {
         const user = await this._checkCredential(loginDto.usernameOrEmail, loginDto.password);
+        const payloadToken = {
+            id: user.id,
+            username: user.username,
+            email: user.email
+        };
+        const accessToken = this.tokenGenerator.generateAccessToken(payloadToken);
+        const refreshToken = this.tokenGenerator.generateRefreshToken(payloadToken);
+        return new TokenDto(accessToken, refreshToken);
+    }
+
+    async refreshToken(token: string): Promise<TokenDto> {
+        const payload = await this.tokenValidator.validateRefreshToken(token);
+        const user = await this.usersRepository.findOne(payload.id);
+        if (!user) {
+            throw new BadRequestException('user not found');
+        }
         const payloadToken = {
             id: user.id,
             username: user.username,

@@ -4,6 +4,7 @@ import { User } from "@app/blogtivity-lib/models/user.model";
 import { LoginDto } from "../../dtos/login.dto";
 import { AuthenticationService } from "../../authentication.service";
 import { TokenDto } from "../../dtos/token.dto";
+import { RefreshDto } from "../../dtos/refresh.dto";
 
 @Controller('v1/auth')
 export class AuthenticationController {
@@ -19,5 +20,10 @@ export class AuthenticationController {
     @Post('login')
     async login(@Body() loginDto: LoginDto): Promise<TokenDto> {
         return await this.authService.login(loginDto);
+    }
+
+    @Post('refresh-token')
+    async refreshToken(@Body() refreshDto: RefreshDto): Promise<TokenDto> {
+        return await this.authService.refreshToken(refreshDto.token);
     }
 }

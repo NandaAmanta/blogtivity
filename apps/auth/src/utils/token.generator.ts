@@ -9,13 +9,15 @@ export class TokenGenerator {
 
     generateAccessToken(payload: object): string {
         return this.jwtService.sign(payload, {
-            expiresIn: '1h'
+            expiresIn: '1h',
+            secret: process.env.ACCESS_TOKEN_SECRET
         });
     }
 
     generateRefreshToken(payload: object): string {
         return this.jwtService.sign(payload, {
-            expiresIn: '1d'
+            expiresIn: '1d',
+            secret: process.env.REFRESH_TOKEN_SECRET
         });
     }
 }

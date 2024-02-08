@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '@app/blogtivity-lib/models/user.model';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { GuardModule } from './modules/guard/guard.module';
+import { TokenGenerator } from './utils/token.generator';
+import { TokenValidator } from './utils/token.validator';
 
 @Module({
   imports: [
@@ -24,6 +26,9 @@ import { GuardModule } from './modules/guard/guard.module';
     AuthenticationModule,
     GuardModule
   ],
-  providers: [],
+  providers: [
+    TokenGenerator,
+    TokenValidator
+  ],
 })
 export class AuthModule { }
