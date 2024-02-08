@@ -5,6 +5,7 @@ import { TokenGenerator } from './modules/authentication/utils/token.generator';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '@app/blogtivity-lib/models/user.model';
+import { AuthenticationModule } from './modules/authentication/authentication.module';
 
 @Module({
   imports: [
@@ -15,21 +16,15 @@ import { User } from '@app/blogtivity-lib/models/user.model';
       username: 'root',
       password: '',
       database: 'test',
-      entities: [User],
-      synchronize: true,
+      entities: [User]
     }),
     JwtModule.register({
       global: true,
       secret: 'secret',
       signOptions: { expiresIn: '1h' },
-    })
+    }),
+    AuthenticationModule
   ],
-  controllers: [
-    AuthenticationController
-  ],
-  providers: [
-    TokenGenerator,
-    AuthenticationService,
-  ],
+  providers: [],
 })
 export class AuthModule { }

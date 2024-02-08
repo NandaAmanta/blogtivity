@@ -18,6 +18,7 @@ export class AuthenticationService {
     ) { }
 
     async register(registerDto: RegisterDto): Promise<User> {
+        await this._checkUsernameAndEmailAvailbility(registerDto.username, registerDto.email);
         const user = new User();
         user.name = registerDto.name;
         user.email = registerDto.email;
@@ -62,4 +63,26 @@ export class AuthenticationService {
         return user;
     }
 
+    private async _checkUsernameAndEmailAvailbility(username: string, email): Promise<void> {
+
+        const userByUsername = await this.usersRepository.createQueryBuilder('user')
+            .where('user.username = :username', {
+                username: username
+            })
+            .getExists();
+
+        if (userByUsername) {
+            throw new BadRequestException('username is not available');
+        }
+
+        const userByEmail = await this.usersRepository.createQueryBuilder('user')
+            .where('user.email = :email', {
+                email: email
+            })
+            .getExists();
+
+        if (userByEmail) {
+            throw new BadRequestException('email is not available');
+        }
+    }
 }
