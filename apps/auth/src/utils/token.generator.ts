@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import configuration from "../configs/configuration";
 
 @Injectable()
 export class TokenGenerator {
@@ -9,15 +10,15 @@ export class TokenGenerator {
 
     generateAccessToken(payload: object): string {
         return this.jwtService.sign(payload, {
-            expiresIn: '1h',
-            secret: process.env.ACCESS_TOKEN_SECRET
+            expiresIn: configuration().jwt.accessToken.expiresIn,
+            secret: configuration().jwt.accessToken.secret
         });
     }
 
     generateRefreshToken(payload: object): string {
         return this.jwtService.sign(payload, {
-            expiresIn: '1d',
-            secret: process.env.REFRESH_TOKEN_SECRET
+            expiresIn: configuration().jwt.refreshToken.expiresIn,
+            secret: configuration().jwt.refreshToken.secret
         });
     }
 }

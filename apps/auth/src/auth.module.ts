@@ -6,22 +6,29 @@ import { AuthenticationModule } from './modules/authentication/authentication.mo
 import { GuardModule } from './modules/guard/guard.module';
 import { TokenGenerator } from './utils/token.generator';
 import { TokenValidator } from './utils/token.validator';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './configs/configuration';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'test',
-      entities: [User]
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      envFilePath: [`${process.cwd()}/apps/auth/.env`, '.env']
+    }),
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: configuration().database.type as 'mysql' | 'mariadb',
+        host: configuration().database.host,
+        port: configuration().database.port,
+        username: configuration().database.username,
+        password: configuration().database.password,
+        database: configuration().database.database,
+        entities: [User]
+      })
     }),
     JwtModule.register({
-      global: true,
-      secret: 'secret',
-      signOptions: { expiresIn: '1h' },
+      global: true
     }),
     AuthenticationModule,
     GuardModule

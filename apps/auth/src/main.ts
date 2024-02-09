@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import configuration from './configs/configuration';
 
 async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
@@ -9,13 +10,17 @@ async function bootstrap() {
     console.log('Auth service is running on port 3000');
   });
 
+  const rabbitmqConf = configuration().rabbitmq;
+  console.log(rabbitmqConf);
   const appMicro = await NestFactory.createMicroservice<MicroserviceOptions>(
     AuthModule,
     {
       transport: Transport.RMQ,
       options: {
-        urls: ['amqp://nanda:nanda0011@192.168.56.109:5672'],
-        queue: 'auths_queue',
+        urls: [
+          `amqp://${rabbitmqConf.username}:${rabbitmqConf.password}@${rabbitmqConf.host}:${rabbitmqConf.port}`
+        ],
+        queue: rabbitmqConf.queue,
         queueOptions: {
           durable: false
         },
