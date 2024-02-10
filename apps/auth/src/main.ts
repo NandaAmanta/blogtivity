@@ -11,7 +11,6 @@ async function bootstrap() {
   });
 
   const rabbitmqConf = configuration().rabbitmq;
-  console.log(rabbitmqConf);
   const appMicro = await NestFactory.createMicroservice<MicroserviceOptions>(
     AuthModule,
     {
