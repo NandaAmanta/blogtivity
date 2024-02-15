@@ -6,8 +6,8 @@ import configuration from './configs/configuration';
 async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
   app.setGlobalPrefix('api');
-  await app.listen(3000).then(() => {
-    console.log('Auth service is running on port 3000');
+  await app.listen(configuration().app.port).then(() => {
+    console.log('Auth service is running on port ' + configuration().app.port  );
   });
 
   const rabbitmqConf = configuration().rabbitmq;

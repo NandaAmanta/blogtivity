@@ -44,7 +44,7 @@ export class User {
 
     @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)", onUpdate: "CURRENT_TIMESTAMP(6)" })
     updated_at: Date;
-
+    
     // check user password with bcrypt
     async checkPassword(password: string): Promise<boolean> {
         return await bcrypt.compare(password, this.password);
