@@ -1,9 +1,10 @@
 import { registerAs } from "@nestjs/config";
 import { DataSource, DataSourceOptions } from "typeorm";
-// import configuration from "./configuration";
 import { config as dotenvConfig } from 'dotenv';
+import { User } from "@app/blogtivity-lib/models/user.model";
+import { CreateTables1707811188085 } from "../migrations/1707811188085-create-tables";
 
-dotenvConfig({ path: [`${process.cwd()}/apps/auth/.env`, '.env']});
+dotenvConfig({ path: [`${process.cwd()}/apps/auth/.env`, '.env'] });
 
 const config = {
     type: process.env.DATABASE_TYPE || 'mysql',
@@ -12,8 +13,8 @@ const config = {
     username: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_NAME || 'auth',
-    entities: ["dist/**/*.entity{.ts,.js}"],
-    migrations: ["dist/migrations/*{.ts,.js}"],
+    entities: [User],
+    migrations: [CreateTables1707811188085],
     autoLoadEntities: true,
     synchronize: false,
 }
