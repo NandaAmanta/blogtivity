@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { RegisterDto } from "./dtos/register.dto";
 import { User } from "@app/blogtivity-lib/models/user.model";
+import { UserActivationCode } from "@app/blogtivity-lib/models/user-activation-code.model";
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoginDto } from "./dtos/login.dto";
@@ -8,6 +9,7 @@ import { UserStatus } from "@app/blogtivity-lib/constants/user-status.constant";
 import { TokenGenerator } from "../../utils/token.generator";
 import { TokenDto } from "./dtos/token.dto";
 import { TokenValidator } from "../../utils/token.validator";
+import { CodeGenerator } from "../../utils/code.generator";
 
 @Injectable()
 export class AuthenticationService {
@@ -15,17 +17,24 @@ export class AuthenticationService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
+        @InjectRepository(UserActivationCode)
+        private userActivationCodeRepository: Repository<UserActivationCode>,
         private tokenGenerator: TokenGenerator,
         private tokenValidator: TokenValidator,
+        private codeGenerator: CodeGenerator
     ) { }
 
     async register(registerDto: RegisterDto): Promise<User> {
         await this._checkUsernameAndEmailAvailbility(registerDto.username, registerDto.email);
-        const user = new User();
+
+        let user = new User();
         user.name = registerDto.name;
         user.email = registerDto.email;
         await user.setHashedPassword(registerDto.password);
-        return this.usersRepository.save(user);
+        user = await this.usersRepository.save(user);
+        
+        await this.createNewActivationCode(user.id);
+        return user;
     }
 
     async login(loginDto: LoginDto): Promise<TokenDto> {
@@ -54,6 +63,43 @@ export class AuthenticationService {
         const accessToken = this.tokenGenerator.generateAccessToken(payloadToken);
         const refreshToken = this.tokenGenerator.generateRefreshToken(payloadToken);
         return new TokenDto(accessToken, refreshToken);
+    }
+
+    async activate(userId: number, code: String) {
+        const activationCode = await this._findValidActivationCodeByUserIdAndCode(userId, code);
+        if (!activationCode) {
+            throw new BadRequestException('Invalid Activation Code');
+        }
+        return await this._activateUserById(userId, activationCode);
+    }
+
+    async createNewActivationCode(userId: number): Promise<UserActivationCode> {
+        this._expiredAllActivationCodeByUserId(userId);
+        const newActivationCode = new UserActivationCode();
+        newActivationCode.user_id = userId;
+        newActivationCode.code = this.codeGenerator.generateUserActivationCode();
+        return newActivationCode;
+    }
+
+    private async _expiredAllActivationCodeByUserId(userId: number) {
+        await this.userActivationCodeRepository.update({ user_id: userId }, { expiredAt: new Date() });
+    }
+
+    private async _activateUserById(userId: number, activationCode: UserActivationCode): Promise<User> {
+        let user = await this.usersRepository.findOneBy({ id: userId });
+        user.status = UserStatus.ACTIVE;
+        activationCode.hasUsed = true;
+        await this.userActivationCodeRepository.save(activationCode);
+        return await this.usersRepository.save(user);
+    }
+
+    private async _findValidActivationCodeByUserIdAndCode(userId: Number, code: String): Promise<UserActivationCode | null> {
+        return await this.userActivationCodeRepository.createQueryBuilder('userCode')
+            .where('userCode.code = :code', { code: code })
+            .where('userCode.user_id = :userId', { userId })
+            .where('userCode.has_used = :hasUsed ', { hasUsed: false })
+            .where('userCode.expired_at >= :now', { now: new Date() })
+            .getOne()
     }
 
     private async _checkCredential(usernameOrEmail: string, password: string): Promise<User> {

@@ -5,6 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "@app/blogtivity-lib/models/user.model";
 import { TokenGenerator } from "../../utils/token.generator";
 import { TokenValidator } from "../../utils/token.validator";
+import { CodeGenerator } from "../../utils/code.generator";
 
 @Module({
     imports: [
@@ -13,7 +14,8 @@ import { TokenValidator } from "../../utils/token.validator";
     providers: [
         AuthenticationService,
         TokenGenerator,
-        TokenValidator
+        TokenValidator,
+        CodeGenerator
     ],
     exports: [TypeOrmModule],
     controllers: [
