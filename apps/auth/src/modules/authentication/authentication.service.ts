@@ -32,7 +32,7 @@ export class AuthenticationService {
         user.email = registerDto.email;
         await user.setHashedPassword(registerDto.password);
         user = await this.usersRepository.save(user);
-        
+
         await this.createNewActivationCode(user.id);
         return user;
     }
@@ -78,6 +78,9 @@ export class AuthenticationService {
         const newActivationCode = new UserActivationCode();
         newActivationCode.user_id = userId;
         newActivationCode.code = this.codeGenerator.generateUserActivationCode();
+        const expiredDate = new Date();
+        expiredDate.setHours(expiredDate.getHours() + 3);
+        newActivationCode.expiredAt = expiredDate;
         return newActivationCode;
     }
 
